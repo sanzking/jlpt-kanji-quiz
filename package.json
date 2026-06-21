@@ -1,0 +1,9 @@
+{
+  "name": "jlpt-kanji-quiz",
+  "version": "1.0.0",
+  "description": "Quiz Kanji N5 & N4",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}

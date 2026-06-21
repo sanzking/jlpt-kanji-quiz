@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JLPT Kanji Test (N5 & N4)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-xl rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 transition-all duration-300">
+        
+        <div id="setup-screen" class="space-y-6">
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-slate-800">JLPT Kanji Quiz</h1>
+                <p class="text-slate-500 text-sm mt-1">Uji kemampuan Kanji N5 dan N4 kamu</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Pilih Level JLPT:</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="selectLevel('N5')" id="btn-n5" class="level-btn py-3 px-4 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-700 font-medium text-center transition">N5</button>
+                        <button onclick="selectLevel('N4')" id="btn-n4" class="level-btn py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-600 font-medium text-center hover:border-slate-300 transition">N4</button>
+                        <button onclick="selectLevel('ALL')" id="btn-all" class="level-btn py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-600 font-medium text-center hover:border-slate-300 transition">Semua</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Pilih Mode Tes:</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="selectMode('kanji-to-meaning')" id="btn-k2m" class="mode-btn py-3 px-4 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-700 font-medium text-center text-sm transition">Kanji → Arti</button>
+                        <button onclick="selectMode('meaning-to-kanji')" id="btn-m2k" class="mode-btn py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-600 font-medium text-center text-sm hover:border-slate-300 transition">Arti → Kanji</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Jumlah Soal:</label>
+                    <select id="quiz-count" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:border-indigo-500 transition">
+                        <option value="10">10 Soal</option>
+                        <option value="20">20 Soal</option>
+                        <option value="50">50 Soal</option>
+                        <option value="100">100 Soal</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl shadow-md shadow-indigo-100 transition cursor-pointer text-center">
+                Mulai Tes Sekarang
+            </button>
+        </div>
+
+        <div id="quiz-screen" class="hidden space-y-6">
+            <div class="flex justify-between items-center text-sm text-slate-500 font-medium">
+                <span id="level-indicator" class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs uppercase">N5</span>
+                <span id="progress-text">Soal 1 dari 10</span>
+            </div>
+
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-indigo-600 h-full transition-all duration-300" style="width: 10%"></div>
+            </div>
+
+            <div class="text-center py-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-xs text-slate-400 font-semibold tracking-wider uppercase mb-2" id="question-hint">Pertanyaan</p>
+                <h2 id="question-display" class="text-5xl font-bold text-slate-800 tracking-tight">日</h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3" id="options-container">
+                </div>
+
+            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-4 rounded-xl transition cursor-pointer text-center">
+                Soal Berikutnya →
+            </button>
+        </div>
+
+        <div id="result-screen" class="hidden text-center space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800">Tes Selesai!</h2>
+                <p class="text-slate-500 text-sm mt-1">Berikut adalah hasil performa latihanmu</p>
+            </div>
+
+            <div class="py-8 bg-indigo-50 rounded-2xl border border-indigo-100 inline-block w-full">
+                <span class="block text-xs text-indigo-600 font-semibold uppercase tracking-wider">Skor Akhir</span>
+                <span id="final-score" class="text-6xl font-bold text-indigo-700 block my-2">0/10</span>
+                <span id="percentage" class="text-sm text-indigo-500 font-medium">0% Benar</span>
+            </div>
+
+            <button onclick="restartQuiz()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-4 rounded-xl transition cursor-pointer text-center">
+                Ulangi Tes
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Database Mentah dari file N5 (1).tres dan N4 (1).tres
+        const n5Data = [
+            { kanji: "日", meaning: "Day; Sun; Japan" }, { kanji: "一", meaning: "One" }, { kanji: "国", meaning: "Country" }, { kanji: "人", meaning: "Person" }, { kanji: "年", meaning: "Year" }, { kanji: "大", meaning: "Large; Big" }, { kanji: "十", meaning: "Ten" }, { kanji: "二", meaning: "Two" }, { kanji: "本", meaning: "Book; Present; Main; True; Real; Counter for long things" }, { kanji: "中", meaning: "In; Inside; Middle; Mean; Center" }, { kanji: "長", meaning: "Long; Leader" }, { kanji: "出", meaning: "Exit; Leave" }, { kanji: "三", meaning: "Three" }, { kanji: "時", meaning: "Time; Hour" }, { kanji: "行", meaning: "Going; Journey" }, { kanji: "見", meaning: "See; Hopes; Chances; Idea; Opinion; Look at; Visible" }, { kanji: "月", meaning: "Month; Moon" }, { kanji: "後", meaning: "Behind; Back; Later" }, { kanji: "前", meaning: "In front; Before" }, { kanji: "生", meaning: "Life; Genuine; Birth" }, { kanji: "五", meaning: "Five" }, { kanji: "間", meaning: "Interval; Space" }, { kanji: "上", meaning: "Above; Up" }, { kanji: "東", meaning: "East" }, { kanji: "四", meaning: "Four" }, { kanji: "今", meaning: "Now" }, { kanji: "金", meaning: "Gold" }, { kanji: "九", meaning: "Nine" }, { kanji: "入", meaning: "Enter; Insert" }, { kanji: "学", meaning: "Study; Learning; Science" }, { kanji: "高", meaning: "Tall; High; Expensive" }, { kanji: "円", meaning: "Circle; Yen; Round" }, { kanji: "子", meaning: "Child; Sign of the rat" }, { kanji: "外", meaning: "Outside" }, { kanji: "八", meaning: "Eight" }, { kanji: "六", meaning: "Six" }, { kanji: "下", meaning: "Below; Down; Descend; Give; Low; Inferior" }, { kanji: "来", meaning: "Come; Due; Next; Cause; Become" }, { kanji: "気", meaning: "Spirit; Mind" }, { kanji: "小", meaning: "Little; Small" }, { kanji: "七", meaning: "Seven" }, { kanji: "山", meaning: "Mountain" }, { kanji: "話", meaning: "Tale; Talk" }, { kanji: "女", meaning: "Woman; Female" }, { kanji: "北", meaning: "North" }, { kanji: "午", meaning: "Noon; Sign of the horse" }, { kanji: "百", meaning: "Hundred" }, { kanji: "書", meaning: "Write" }, { kanji: "先", meaning: "Before; Ahead; Previous; Future; Precedence" }, { kanji: "名", meaning: "Name; Noted; Distinguished; Reputation" }, { kanji: "川", meaning: "Stream; River" }, { kanji: "千", meaning: "Thousand" }, { kanji: "水", meaning: "Water" }, { kanji: "半", meaning: "Half; Middle; Odd number; Semi-; Part-" }, { kanji: "男", meaning: "Male" }, { kanji: "西", meaning: "West; Spain" }, { kanji: "電", meaning: "Electricity" }, { kanji: "校", meaning: "Exam; School; Printing; Proof; Correction" }, { kanji: "語", meaning: "Word; Speech; Language" }, { kanji: "土", meaning: "Soil; Earth; Ground; Turkey" }, { kanji: "木", meaning: "Tree; Wood" }, { kanji: "聞", meaning: "Hear; Ask; Listen" }, { kanji: "食", meaning: "Eat; Food" }, { kanji: "車", meaning: "Car" }, { kanji: "何", meaning: "What" }, { kanji: "南", meaning: "South" }, { kanji: "万", meaning: "Ten thousand" }, { kanji: "毎", meaning: "Every" }, { kanji: "白", meaning: "White" }, { kanji: "天", meaning: "Heavens; Sky; Imperial" }, { font: "母", kanji: "母", meaning: "Mama; Mother" }, { kanji: "火", meaning: "Fire" }, { kanji: "右", meaning: "Right" }, { kanji: "読", meaning: "Read" }, { kanji: "友", meaning: "Friend" }, { kanji: "左", meaning: "Left" }, { kanji: "休", meaning: "Rest; Day off; Retire; Sleep" }, { kanji: "父", meaning: "Father" }, { kanji: "雨", meaning: "Rain" }
+        ];
+
+        const n4Data = [
+            { kanji: "会", meaning: "Meeting; Meet; Party; Association; Interview; Join" }, { kanji: "同", meaning: "Same; Agree; Equal" }, { kanji: "事", meaning: "Matter; Thing; Fact; Business; Reason; Possibly" }, { kanji: "自", meaning: "Oneself" }, { kanji: "社", meaning: "Company; Firm; Office; Association; Shrine" }, { kanji: "発", meaning: "Discharge; Departure; Publish; Emit; Start from; Disclose" }, { kanji: "者", meaning: "Someone; Person" }, { kanji: "地", meaning: "Ground; Earth" }, { kanji: "業", meaning: "Business; Vocation; Arts; Performance" }, { kanji: "方", meaning: "Direction; Person; Alternative" }, { kanji: "新", meaning: "New" }, { kanji: "場", meaning: "Location; Place" }, { kanji: "員", meaning: "Employee; Member; Number; The one in charge" }, { kanji: "立", meaning: "Stand up" }, { kanji: "開", meaning: "Open; Unfold; Unseal" }, { kanji: "手", meaning: "Hand" }, { kanji: "力", meaning: "Power; Strong; Strain; Bear up; Exert" }, { kanji: "問", meaning: "Question; Ask; Problem" }, { kanji: "代", meaning: "Substitute; Change; Convert; Replace; Period; Age; Generation; Charge; Rate; Fee" }, { kanji: "明", meaning: "Bright; Light" }, { kanji: "動", meaning: "Move; Motion; Change; Confusion; Shift; Shake" }, { kanji: "京", meaning: "Capital; 10**16" }, { kanji: "目", meaning: "Eye; Class; Look; Insight; Experience; Care; Favor" }, { kanji: "通", meaning: "Traffic; Pass through; Avenue; Commute; Counter for letters" }, { kanji: "言", meaning: "Say" }, { kanji: "理", meaning: "Logic; Arrangement; Reason; Justice; Truth" }, { kanji: "体", meaning: "Body; Substance; Object; Reality; Counter for images" }, { kanji: "田", meaning: "Rice field; Rice paddy" }, { kanji: "主", meaning: "Lord; Chief; Master; Main thing; Principal" }, { kanji: "題", meaning: "Topic; Subject" }, { kanji: "意", meaning: "Idea; Mind; Heart; Taste; Thought; Desire; Care; Liking" }, { kanji: "不", meaning: "Negative; Non-; Bad; Ugly; Clumsy" }, { kanji: "作", meaning: "Make; Production; Prepare; Build" }, { kanji: "用", meaning: "Utilize; Business; Service; Use; Employ" }, { kanji: "度", meaning: "Degrees; Occurrence; Time; Counter for occurrences" }, { kanji: "強", meaning: "Strong" }, { kanji: "公", meaning: "Public; Prince; Official; Governmental" }, { kanji: "持", meaning: "Hold; Have" }, { kanji: "野", meaning: "Plains; Field; Rustic; Civilian life" }, { kanji: "以", meaning: "By means of; Because; In view of; Compared with" }, { kanji: "思", meaning: "Think" }, { kanji: "家", meaning: "House; Home" }, { kanji: "世", meaning: "Generation; World; Society; Public" }, { kanji: "多", meaning: "Many; Frequent; Much" }, { kanji: "正", meaning: "Correct; Justice; Righteous; 10**40" }, { kanji: "安", meaning: "Relax; Cheap; Low; Quiet; Rested; Contented; Peaceful" }, { kanji: "院", meaning: "Inst.; Institution; Temple; Mansion; School" }, { kanji: "心", meaning: "Heart; Mind; Spirit" }, { kanji: "界", meaning: "World" }, { kanji: "教", meaning: "Teach; Faith; Doctrine" }, { kanji: "文", meaning: "Sentence; Literature; Style; Art; Decoration; Figures; Plan" }, { kanji: "元", meaning: "Beginning; Former time; Origin" }, { kanji: "重", meaning: "Heavy; Heap up; Pile up; Nest of boxes; -fold" }, { kanji: "近", meaning: "Near; Early; Akin; Tantamount" }, { kanji: "考", meaning: "Consider; Think over" }, { kanji: "画", meaning: "Brush-stroke; Picture" }, { kanji: "海", meaning: "Sea; Ocean" }, { kanji: "売", meaning: "Sell" }, { kanji: "知", meaning: "Know; Wisdom" }, { kanji: "道", meaning: "Road-way; Street; District; Journey; Course; Moral; Teachings" }, { kanji: "集", meaning: "Gather; Meet; Congregate; Swarm; Flock" }, { kanji: "別", meaning: "Separate; Branch off; Diverge; Fork; Another; Extra; Specially" }, { kanji: "物", meaning: "Thing; Object; Matter" }, { kanji: "使", meaning: "Use" }, { kanji: "品", meaning: "Goods; Refinement; Dignity; Article; Counter for meal courses" }, { kanji: "計", meaning: "Plot; Plan; Scheme; Measure" }, { kanji: "死", meaning: "Death; Die" }, { kanji: "特", meaning: "Special" }, { kanji: "私", meaning: "Private; I; Me" }, { kanji: "始", meaning: "Commence; Begin" }, { kanji: "朝", meaning: "Morning; Dynasty; Regime; Epoch; Period; (North) Korea" }, { kanji: "運", meaning: "Carry; Luck; Destiny; Fate; Lot; Transport; Progress; Advance" }, { kanji: "終", meaning: "End; Finish" }, { kanji: "台", meaning: "Pedestal; A stand; Counter for machines and vehicles" }, { kanji: "広", meaning: "Wide; Broad; Spacious" }, { kanji: "住", meaning: "Dwell; Reside; Live; Inhabit" }, { kanji: "真", meaning: "True; Reality; Buddhist sect" }, { kanji: "有", meaning: "Possess; Have; Exist; Happen; Occur; Approx" }, { kanji: "口", meaning: "Mouth" }, { kanji: "少", meaning: "Few; Little" }, { kanji: "町", meaning: "Village; Town; Block; Street" }, { kanji: "料", meaning: "Fee; Materials" }, { kanji: "工", meaning: "Craft; Construction" }, { kanji: "建", meaning: "Build" }, { kanji: "空", meaning: "Empty; Sky; Void; Vacant; Vacuum" }, { kanji: "急", meaning: "Hurry; Emergency; Sudden; Steep" }, { kanji: "止", meaning: "Stop; Halt" }, { kanji: "送", meaning: "Escort; Send" }, { kanji: "切", meaning: "Cut; Cutoff; Be sharp" }, { kanji: "転", meaning: "Revolve; Turn around; Change" }, { kanji: "研", meaning: "Polish; Study of; Sharpen" }, { kanji: "足", meaning: "Leg; Foot; Be sufficient; Counter for pairs of footwear" }, { kanji: "究", meaning: "Research; Study" }, { kanji: "楽", meaning: "Music; Comfort; Ease" }, { kanji: "起", meaning: "Rouse; Wake up; Get up" }, { kanji: "着", meaning: "Don; Arrive; Wear; Counter for suits of clothing" }, { kanji: "店", meaning: "Store; Shop" }, { kanji: "病", meaning: "Ill; Sick" }, { kanji: "質", meaning: "Substance; Quality; Matter; Temperament" }, { kanji: "待", meaning: "Wait; Depend on" }, { kanji: "試", meaning: "Test; Try; Attempt; Experiment; Ordeal" }, { kanji: "族", meaning: "Tribe; Family" }, { kanji: "銀", meaning: "Silver" }, { kanji: "早", meaning: "Early; Fast" }, { kanji: "映", meaning: "Reflect; Reflection; Projection" }, { kanji: "親", meaning: "Parent; Intimacy; Relative; Familiarity; Dealer (cards)" }, { kanji: "験", meaning: "Verification; Effect; Testing" }, { kanji: "英", meaning: "England; English" }, { kanji: "医", meaning: "Doctor; Medicine" }, { kanji: "仕", meaning: "Attend; Doing; Official; Serve" }, { kanji: "去", meaning: "Gone; Past; Quit; Leave; Elapse; Eliminate; Divorce" }, { kanji: "味", meaning: "Flavor; Taste" }, { kanji: "写", meaning: "Copy; Be photographed; Describe" }, { kanji: "字", meaning: "Character; Letter; Word; Section of village" }, { kanji: "答", meaning: "Solution; Answer" }, { kanji: "夜", meaning: "Night; Evening" }, { kanji: "音", meaning: "Sound; Noise" }, { kanji: "注", meaning: "Pour; Irrigate; Shed (tears); Flow into; Concentrate on; Notes; Comment; Annotate" }, { kanji: "帰", meaning: "Homecoming; Arrive at; Lead to; Result in" }, { kanji: "古", meaning: "Old" }, { kanji: "歌", meaning: "Song; Sing" }, { kanji: "買", meaning: "Buy" }, { kanji: "悪", meaning: "Bad; Vice; Rascal; False; Evil; Wrong" }, { kanji: "図", meaning: "Map; Drawing; Plan; Unexpected; Accidentally" }, { kanji: "週", meaning: "Week" }, { kanji: "室", meaning: "Room; Apartment; Chamber; Greenhouse; Cellar" }, { kanji: "歩", meaning: "Walk; Counter for steps" }, { kanji: "風", meaning: "Wind; Air; Style; Manner" }, { kanji: "紙", meaning: "Paper" }, { kanji: "黒", meaning: "Black" }, { kanji: "花", meaning: "Flower" }, { kanji: "春", meaning: "Springtime; Spring (season)" }, { kanji: "赤", meaning: "Red" }, { kanji: "青", meaning: "Blue; Green" }, { kanji: "館", meaning: "Building; Mansion; Large building; Palace" }, { kanji: "屋", meaning: "Roof; House; Shop; Dealer; Seller" }, { kanji: "色", meaning: "Color" }, { kanji: "走", meaning: "Run" }, { kanji: "秋", meaning: "Autumn" }, { kanji: "夏", meaning: "Summer" }, { kanji: "習", meaning: "Learn" }, { kanji: "駅", meaning: "Station" }, { kanji: "洋", meaning: "Ocean; Western style" }, { kanji: "旅", meaning: "Trip; Travel" }, { kanji: "服", meaning: "Clothing; Admit; Obey; Discharge" }, { kanji: "夕", meaning: "Evening" }, { kanji: "借", meaning: "Borrow; Rent" }, { kanji: "曜", meaning: "Weekday" }, { kanji: "飲", meaning: "Drink; Smoke; Take" }, { kanji: "肉", meaning: "Meat" }, { kanji: "貸", meaning: "Lend" }, { kanji: "堂", meaning: "Public chamber; Hall" }, { kanji: "鳥", meaning: "Bird; Chicken" }, { kanji: "飯", meaning: "Meal; Boiled rice" }, { kanji: "勉", meaning: "Exertion" }, { kanji: "冬", meaning: "Winter" }, { kanji: "昼", meaning: "Daytime; Noon" }, { kanji: "茶", meaning: "Tea" }, { kanji: "弟", meaning: "Younger brother; Faithful service to elders" }, { kanji: "牛", meaning: "Cow" }, { kanji: "魚", meaning: "Fish" }, { kanji: "兄", meaning: "Elder brother; Big brother" }, { kanji: "犬", meaning: "Dog" }, { kanji: "妹", meaning: "Younger sister" }, { kanji: "姉", meaning: "Elder sister" }, { kanji: "漢", meaning: "Sino-; China" }
+        ];
+
+        // State Aplikasi
+        let selectedLevel = 'N5';
+        let selectedMode = 'kanji-to-meaning';
+        let fullPool = [];
+        let quizQuestions = [];
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        // Fungsi Memilih Level
+        function selectLevel(level) {
+            selectedLevel = level;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+                btn.classList.add('border-slate-200', 'text-slate-600');
+            });
+            const activeBtn = document.getElementById(`btn-${level.toLowerCase()}`);
+            activeBtn.classList.remove('border-slate-200', 'text-slate-600');
+            activeBtn.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+        }
+
+        // Fungsi Memilih Mode
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+                btn.classList.add('border-slate-200', 'text-slate-600');
+            });
+            const activeId = mode === 'kanji-to-meaning' ? 'btn-k2m' : 'btn-m2k';
+            const activeBtn = document.getElementById(activeId);
+            activeBtn.classList.remove('border-slate-200', 'text-slate-600');
+            activeBtn.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+        }
+
+        // Memulai Quiz
+        function startQuiz() {
+            // Tentukan database berdasarkan level
+            if (selectedLevel === 'N5') fullPool = [...n5Data];
+            else if (selectedLevel === 'N4') fullPool = [...n4Data];
+            else fullPool = [...n5Data, ...n4Data];
+
+            const totalRequested = parseInt(document.getElementById('quiz-count').value);
+            
+            // Acak (Shuffle) pool data dan ambil sejumlah permintaan
+            const shuffledPool = [...fullPool].sort(() => 0.5 - Math.random());
+            quizQuestions = shuffledPool.slice(0, Math.min(totalRequested, shuffledPool.length));
+
+            // Reset state
+            currentQuestionIdx = 0;
+            score = 0;
+
+            // Pindah screen
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+
+            showQuestion();
+        }
+
+        // Menampilkan Soal
+        function showQuestion() {
+            hasAnswered = false;
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const currentItem = quizQuestions[currentQuestionIdx];
+            const totalQuestions = quizQuestions.length;
+
+            // Update Header Status & Progress
+            document.getElementById('level-indicator').innerText = selectedLevel === 'ALL' ? 'N5 + N4' : selectedLevel;
+            document.getElementById('progress-text').innerText = `Soal ${currentQuestionIdx + 1} dari ${totalQuestions}`;
+            const progressPercent = ((currentQuestionIdx + 1) / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Set text pertanyaan berdasarkan mode
+            if (selectedMode === 'kanji-to-meaning') {
+                document.getElementById('question-hint').innerText = "Apa arti dari Kanji berikut?";
+                document.getElementById('question-display').innerText = currentItem.kanji;
+                document.getElementById('question-display').className = "text-5xl font-bold text-slate-800 tracking-tight";
+            } else {
+                document.getElementById('question-hint').innerText = "Pilih Kanji yang tepat untuk arti berikut:";
+                document.getElementById('question-display').innerText = currentItem.meaning;
+                document.getElementById('question-display').className = "text-xl font-semibold text-slate-700 px-4 leading-relaxed";
+            }
+
+            // Generate Pilihan Jawaban
+            generateOptions(currentItem);
+        }
+
+        // Membuat Pilihan Jawaban Acak (1 Benar, 3 Salah)
+        function generateOptions(correctItem) {
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            // Ambil kandidat salah dari seluruh pool data
+            let wrongCandidates = fullPool.filter(item => item.kanji !== correctItem.kanji);
+            wrongCandidates = wrongCandidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            // Gabungkan dan acak susunannya
+            const options = [correctItem, ...wrongCandidates].sort(() => 0.5 - Math.random());
+
+            options.forEach(item => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left py-4 px-5 border border-slate-200 rounded-xl font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition cursor-pointer flex items-center justify-between group";
+                
+                // Isi teks tombol berdasarkan mode
+                if (selectedMode === 'kanji-to-meaning') {
+                    button.innerHTML = `<span>${item.meaning}</span>`;
+                } else {
+                    button.innerHTML = `<span class="text-2xl font-bold tracking-tight">${item.kanji}</span>`;
+                }
+
+                // Event click
+                button.onclick = () => checkAnswer(button, item.kanji, correctItem.kanji);
+                container.appendChild(button);
+            });
+        }
+
+        // Validasi Jawaban
+        function checkAnswer(selectedButton, selectedKanji, correctKanji) {
+            if (hasAnswered) return; // Kunci jawaban agar tidak bisa klik berkali-kali
+            hasAnswered = true;
+
+            const container = document.getElementById('options-container');
+            const buttons = container.getElementsByTagName('button');
+
+            if (selectedKanji === correctKanji) {
+                // Jawaban Benar
+                selectedButton.classList.remove('border-slate-200', 'hover:bg-slate-50');
+                selectedButton.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-700');
+                selectedButton.innerHTML += `<span class="text-emerald-600 font-bold">✓</span>`;
+                score++;
+            } else {
+                // Jawaban Salah
+                selectedButton.classList.remove('border-slate-200', 'hover:bg-slate-50');
+                selectedButton.classList.add('bg-rose-50', 'border-rose-400', 'text-rose-700');
+                selectedButton.innerHTML += `<span class="text-rose-500 font-bold">✗</span>`;
+
+                // Highlight Jawaban yang Benar
+                for (let btn of buttons) {
+                    // Ekstrak data pengecekan internal
+                    // Mencari button yang mengandung kanji/meaning yang benar
+                    if (selectedMode === 'kanji-to-meaning') {
+                        const currentItem = quizQuestions[currentQuestionIdx];
+                        if (btn.innerText.includes(currentItem.meaning)) {
+                            btn.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-700');
+                        }
+                    } else {
+                        if (btn.innerText.includes(correctKanji)) {
+                            btn.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-700');
+                        }
+                    }
+                }
+            }
+
+            // Tampilkan tombol lanjut
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        // Pindah ke Pertanyaan Selanjutnya atau Selesai
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < quizQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // Menampilkan Hasil Akhir
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const total = quizQuestions.length;
+            document.getElementById('final-score').innerText = `${score}/${total}`;
+            
+            const percentage = Math.round((score / total) * 100);
+            document.getElementById('percentage').innerText = `${percentage}% Benar`;
+        }
+
+        // Mengulang Quiz
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
