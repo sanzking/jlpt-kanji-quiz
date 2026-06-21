@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>JLPT Kotoba Quiz</title>
+<style>
+body{font-family:Arial;margin:20px;background:#f4f6f9}
+.card{background:white;padding:20px;border-radius:12px;max-width:900px;margin:auto}
+button{padding:10px 14px;margin:5px;cursor:pointer}
+.option{display:block;width:100%;text-align:left}
+.correct{background:#b9f6ca}
+.wrong{background:#ffb3b3}
+#anim{font-size:60px;text-align:center;height:80px}
+</style></head>
+<body><div class="card">
+<h2>JLPT Kotoba Quiz N4/N5</h2>
+<p>25 kata per sesi. Pilih level, mode, dan nomor sesi.</p>
+<select id="level"><option>N5</option><option>N4</option></select>
+<select id="mode"><option value="jp-id">Jepang → Indonesia</option><option value="id-jp">Indonesia → Jepang</option></select>
+<input id="session" type="number" min="1" value="1">
+<button onclick="startQuiz()">Mulai</button>
+<div id="quiz"></div><div id="anim"></div>
+</div>
+<script src="data.js"></script>
+<script>
+let qs=[],idx=0,score=0;
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5)}
+function startQuiz(){
+ const level=levelEl.value, mode=modeEl.value;
+ let all=KOTOBA_DATA[level];
+ let s=parseInt(sessionEl.value||1);
+ let start=(s-1)*25;
+ qs=all.slice(start,start+25);
+ idx=0; score=0;
+ render();
+}
+function render(){
+ if(idx>=qs.length){quiz.innerHTML="<h3>Selesai! Skor "+score+"/"+qs.length+"</h3>"; return;}
+ let q=qs[idx];
+ let ask=q.jp, ans=q.id;
+ if(mode.value=="id-jp"){ask=q.id; ans=q.jp;}
+ let pool=shuffle(KOTOBA_DATA[level.value]).filter(x=>(mode.value=="id-jp"?x.jp:x.id)!=ans).slice(0,3);
+ let opts=shuffle([ans,...pool.map(x=>mode.value=="id-jp"?x.jp:x.id)]);
+ let h="<h3>"+(idx+1)+"/"+qs.length+"</h3><p><b>"+ask+"</b></p>";
+ opts.forEach(o=>h+=`<button class='option' onclick='check(this,${JSON.stringify(ans)},${JSON.stringify(o)})'>${o}</button>`);
+ quiz.innerHTML=h;
+}
+const levelEl=document.getElementById("level"), mode=document.getElementById("mode"), sessionEl=document.getElementById("session"), quiz=document.getElementById("quiz");
+function check(btn,ans,sel){
+ let ok=ans===sel;
+ document.getElementById("anim").innerHTML=ok?"✅🎉":"❌💥";
+ if(ok){score++;btn.classList.add("correct");}
+ else{btn.classList.add("wrong");}
+ setTimeout(()=>{document.getElementById("anim").innerHTML="";idx++;render();},800);
+}
+</script></body></html>
