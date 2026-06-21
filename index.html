@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>JLPT Quiz</title>
+<style>
+body{font-family:Arial;max-width:900px;margin:auto;padding:20px}
+.card{border:1px solid #ccc;padding:15px;border-radius:8px}
+button{margin:5px;padding:8px}
+.opt{display:block;width:100%;text-align:left}
+</style></head>
+<body>
+<h2>JLPT N5/N4 Quiz</h2>
+<div>
+Level:
+<select id="level"><option value="ALL">N5+N4</option><option>N5</option><option>N4</option></select>
+Mode:
+<select id="mode"><option value="jp2id">Jepang → Indonesia</option><option value="id2jp">Indonesia → Jepang</option></select>
+Session:
+<input id="session" type="number" min="1" value="1">
+<button onclick="start()">Mulai</button>
+</div>
+<p>1 sesi = 25 kotoba.</p>
+<div id="quiz"></div>
+<script src="data.js"></script>
+<script>
+let q=[],i=0,score=0;
+function shuffle(a){return a.sort(()=>Math.random()-0.5)}
+function start(){
+ const lv=document.getElementById('level').value;
+ const mode=document.getElementById('mode').value;
+ let data=VOCAB.filter(v=>lv==='ALL'||v.level===lv);
+ const sess=parseInt(document.getElementById('session').value||1);
+ const startIdx=(sess-1)*25;
+ data=data.slice(startIdx,startIdx+25);
+ q=data.map(v=>{
+   let correct=mode==='jp2id'?v.id:v.jp;
+   let pool=data.filter(x=>x!==v).map(x=>mode==='jp2id'?x.id:x.jp);
+   let opts=shuffle([correct,...shuffle(pool).slice(0,3)]);
+   return {question:mode==='jp2id'?v.jp:v.id,correct,opts};
+ });
+ i=0;score=0;show();
+}
+function show(){
+ if(i>=q.length){document.getElementById('quiz').innerHTML='<h3>Skor '+score+'/'+q.length+'</h3>';return;}
+ let c=q[i];
+ let h='<div class="card"><h3>'+(i+1)+'/'+q.length+'</h3><h2>'+c.question+'</h2>';
+ c.opts.forEach(o=>h+='<button class="opt" onclick="ans('+JSON.stringify(o)+')">'+o+'</button>');
+ h+='</div>';
+ document.getElementById('quiz').innerHTML=h;
+}
+function ans(o){if(o===q[i].correct)score++;i++;show();}
+</script></body></html>
